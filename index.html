@@ -57,29 +57,31 @@
         // Final confirmed URL
         const modelURL = 'https://raw.githubusercontent.com/lankevenkatahemanth-beep/fnl3dmodeljnj/main/Jnj3dmodel-v1.glb';
 
-        loader.load(modelURL, (gltf) => {
-            myLogo = gltf.scene;
+        // --- THE FIX: Use a relative path since the file is in the same folder ---
+const modelURL = './Jnj3dmodel-v1.glb'; 
 
-            // Center the model based on its real size
-            const box = new THREE.Box3().setFromObject(myLogo);
-            const center = box.getCenter(new THREE.Vector3());
-            myLogo.position.sub(center); 
-            
-            // Adjust scale (Your model is internally very small)
-            myLogo.scale.set(7, 7, 7);
+loader.load(modelURL, (gltf) => {
+    myLogo = gltf.scene;
 
-            scene.add(myLogo);
-            document.getElementById('loader').style.display = 'none';
-        }, 
-        (xhr) => {
-            const p = Math.round((xhr.loaded / (xhr.total || 4500000)) * 100);
-            document.getElementById('percent').innerText = p + '%';
-        },
-        (err) => {
-            document.getElementById('msg').innerText = "Load Failed. See Console (F12)";
-            console.error("Detailed Error Info:", err);
-        });
+    // Center the model
+    const box = new THREE.Box3().setFromObject(myLogo);
+    const center = box.getCenter(new THREE.Vector3());
+    myLogo.position.sub(center); 
+    
+    // Your model is very small (0.4 units), so we scale it up
+    myLogo.scale.set(10, 10, 10);
 
+    scene.add(myLogo);
+    document.getElementById('loader').style.display = 'none';
+}, 
+(xhr) => {
+    const p = Math.round((xhr.loaded / (xhr.total || 4500000)) * 100);
+    document.getElementById('percent').innerText = p + '%';
+},
+(err) => {
+    document.getElementById('msg').innerText = "File not found in folder!";
+    console.error("Path Error:", err);
+});
         // 4. Animation
         function animate() {
             requestAnimationFrame(animate);
@@ -99,3 +101,4 @@
     </script>
 </body>
 </html>
+

@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>J&J 3D Logo</title>
+    <title>J&J 3D Model</title>
     <style>
-        body { margin: 0; background-color: #ffffff; overflow: hidden; font-family: sans-serif; }
+        body { margin: 0; background: #ffffff; overflow: hidden; font-family: sans-serif; }
         #loader {
             position: absolute; top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            text-align: center; color: #333;
+            text-align: center; color: #cc0000;
         }
     </style>
 </head>
 <body>
     <div id="loader">
-        <h2 id="msg">Loading J&J 3D Model...</h2>
+        <h2 id="msg">Loading J&J Assets...</h2>
         <h1 id="percent">0%</h1>
     </div>
 
@@ -32,37 +32,41 @@
         import * as THREE from 'three';
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
+        // 1. Scene Setup
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(0, 0, 3); // Closer camera for your specific model size
+        camera.position.set(0, 0, 5); 
 
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.toneMapping = THREE.ACESFilmicToneMapping; // Better colors
+        renderer.toneMappingExposure = 1.2;
         document.body.appendChild(renderer.domElement);
 
-        // Bright lighting to show off the textures
-        scene.add(new THREE.AmbientLight(0xffffff, 1.5));
-        const sun = new THREE.DirectionalLight(0xffffff, 2);
-        sun.position.set(5, 5, 5);
-        scene.add(sun);
+        // 2. Lighting
+        scene.add(new THREE.AmbientLight(0xffffff, 2));
+        const dirLight = new THREE.DirectionalLight(0xffffff, 2);
+        dirLight.position.set(5, 5, 5);
+        scene.add(dirLight);
 
+        // 3. Loader with Error Checking
         let myLogo;
         const loader = new GLTFLoader();
         
-        // This is the link that showed you the "gibberish" - it's perfect for the code!
+        // Final confirmed URL
         const modelURL = 'https://raw.githubusercontent.com/lankevenkatahemanth-beep/fnl3dmodeljnj/main/Jnj3dmodel-v1.glb';
 
         loader.load(modelURL, (gltf) => {
             myLogo = gltf.scene;
 
-            // Center and Scale fix
+            // Center the model based on its real size
             const box = new THREE.Box3().setFromObject(myLogo);
             const center = box.getCenter(new THREE.Vector3());
             myLogo.position.sub(center); 
             
-            // Your model is about 0.8 units, so scaling to 2 makes it fit perfectly
-            myLogo.scale.set(2.5, 2.5, 2.5);
+            // Adjust scale (Your model is internally very small)
+            myLogo.scale.set(7, 7, 7);
 
             scene.add(myLogo);
             document.getElementById('loader').style.display = 'none';
@@ -72,19 +76,21 @@
             document.getElementById('percent').innerText = p + '%';
         },
         (err) => {
-            document.getElementById('msg').innerText = "Connection Error";
-            console.error(err);
+            document.getElementById('msg').innerText = "Load Failed. See Console (F12)";
+            console.error("Detailed Error Info:", err);
         });
 
+        // 4. Animation
         function animate() {
             requestAnimationFrame(animate);
             if (myLogo) {
-                myLogo.rotation.y += 0.01; // Smooth rotation
+                myLogo.rotation.y += 0.01; 
             }
             renderer.render(scene, camera);
         }
         animate();
 
+        // 5. Responsive Resize
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();

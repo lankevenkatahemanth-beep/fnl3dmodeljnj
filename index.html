@@ -3,22 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>J&J 3D Experience</title>
+    <title>J&J 3D Logo Live</title>
     <style>
-        body { margin: 0; background-color: #111111; overflow: hidden; font-family: sans-serif; }
-        canvas { display: block; }
-        #ui {
+        body { margin: 0; background-color: #000000; overflow: hidden; font-family: sans-serif; }
+        #loader {
             position: absolute; top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            text-align: center; color: white;
-            pointer-events: none;
+            color: white; text-align: center;
         }
     </style>
 </head>
 <body>
-    <div id="ui">
-        <h2 id="status">Loading 3D Logo...</h2>
-        <p id="progress">0%</p>
+    <div id="loader">
+        <h2 id="msg">Downloading 3D Assets...</h2>
+        <h1 id="percent">0%</h1>
     </div>
 
     <script type="importmap">
@@ -34,66 +32,61 @@
         import * as THREE from 'three';
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-        // 1. Scene Setup
+        // 1. Basic Scene
         const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(0, 0, 12); // Positioned to see the boosted scale
+        const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 0, 3); // Move camera closer to see the small model
 
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(window.devicePixelRatio);
         document.body.appendChild(renderer.domElement);
 
-        // 2. Lighting (Crucial for AI-generated models)
-        const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 2);
-        scene.add(hemiLight);
+        // 2. Strong Lighting
+        scene.add(new THREE.AmbientLight(0xffffff, 2));
+        const light = new THREE.DirectionalLight(0xffffff, 3);
+        light.position.set(2, 2, 5);
+        scene.add(light);
 
-        const dirLight = new THREE.DirectionalLight(0xffffff, 3);
-        dirLight.position.set(5, 5, 5);
-        scene.add(dirLight);
-
-        // 3. Load Model
+        // 3. The Model
         let myLogo;
         const loader = new GLTFLoader();
+        // Use the RAW link that shows the gibberish text
         const modelURL = 'https://raw.githubusercontent.com/lankevenkatahemanth-beep/fnl3dmodeljnj/main/Jnj3dmodel-v1.glb';
 
-        loader.load(modelURL, 
-            (gltf) => {
-                myLogo = gltf.scene;
+        loader.load(modelURL, (gltf) => {
+            myLogo = gltf.scene;
 
-                // Center the model
-                const box = new THREE.Box3().setFromObject(myLogo);
-                const center = box.getCenter(new THREE.Vector3());
-                myLogo.position.sub(center); 
+            // Fix the orientation/center
+            const box = new THREE.Box3().setFromObject(myLogo);
+            const center = box.getCenter(new THREE.Vector3());
+            myLogo.position.sub(center); 
 
-                // Scaling Fix: Your model is tiny (0.4 units), so we multiply by 15
-                myLogo.scale.set(15, 15, 15);
+            // Scale fix: Making it large enough to see
+            myLogo.scale.set(4, 4, 4);
 
-                scene.add(myLogo);
-                document.getElementById('ui').style.display = 'none';
-            }, 
-            (xhr) => {
-                const percent = Math.round((xhr.loaded / (xhr.total || 4500000)) * 100);
-                document.getElementById('progress').innerText = percent + '%';
-            },
-            (error) => {
-                document.getElementById('status').innerText = "Loading Error";
-                console.error(error);
-            }
-        );
+            scene.add(myLogo);
+            document.getElementById('loader').style.display = 'none';
+        }, 
+        (xhr) => {
+            const p = Math.round((xhr.loaded / (xhr.total || 4500000)) * 100);
+            document.getElementById('percent').innerText = p + '%';
+        },
+        (err) => {
+            document.getElementById('msg').innerText = "Link Error!";
+            console.error(err);
+        });
 
-        // 4. Animation Loop
+        // 4. Animation
         function animate() {
             requestAnimationFrame(animate);
             if (myLogo) {
-                myLogo.rotation.y += 0.01; // Constant spin
-                myLogo.rotation.x = Math.sin(Date.now() * 0.001) * 0.2; // Gentle tilt
+                myLogo.rotation.y += 0.01; 
             }
             renderer.render(scene, camera);
         }
         animate();
 
-        // 5. Responsive Resize
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
